@@ -87,7 +87,9 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const userRole = session?.user?.role;
+  const userRole =
+    session?.user?.role ??
+    (process.env.NEXT_PUBLIC_USE_MOCKS === "true" ? UserRole.ADMIN : undefined);
 
   // Filter nav items based on user role
   const filteredNavItems = navItems.filter((item) =>

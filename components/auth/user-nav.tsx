@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
+import { DEMO_USER } from "@/lib/demo/demo-mode";
 
 const roleLabels: Record<string, string> = {
   ADMIN: "Administrator",
@@ -37,23 +38,27 @@ const roleColors: Record<string, string> = {
 
 export function UserNav() {
   const { data: session } = useSession();
+  const isDemo = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
 
-  if (!session?.user) {
+  const user = session?.user ?? (isDemo ? DEMO_USER : null);
+
+  if (!user) {
     return null;
   }
 
-  const initials = session.user.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase() || session.user.email[0].toUpperCase();
+  const initials =
+    user.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase() || user.email![0].toUpperCase();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
+            <AvatarImage src={user.image || ""} alt={user.name || ""} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>
@@ -61,15 +66,15 @@ export function UserNav() {
       <DropdownMenuContent className="w-64" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-2">
-            <p className="text-sm font-medium leading-none">{session.user.name}</p>
+            <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {session.user.email}
+              {user.email}
             </p>
-            <Badge 
-              variant="secondary" 
-              className={`w-fit text-xs ${roleColors[session.user.role]} text-white`}
+            <Badge
+              variant="secondary"
+              className={`w-fit text-xs ${roleColors[user.role]} text-white`}
             >
-              {roleLabels[session.user.role]}
+              {roleLabels[user.role]}
             </Badge>
           </div>
         </DropdownMenuLabel>
@@ -89,10 +94,14 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer text-red-600 focus:text-red-600"
-          onClick={() => signOut({ callbackUrl: "/auth/login" })}
+          onClick={() =>
+            isDemo
+              ? (window.location.href = "/")
+              : signOut({ callbackUrl: "/auth/login" })
+          }
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>{isDemo ? "Exit demo" : "Log out"}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
