@@ -472,7 +472,9 @@ function SiteFooter() {
               projects — unified, with private AI built in.
             </p>
             <a
-              href="https://github.com/"
+              href="https://github.com/shahriar-ahmed-seam/coregrid"
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-5 inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white"
             >
               <Github className="size-4" /> Star on GitHub
