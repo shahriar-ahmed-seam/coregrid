@@ -43,5 +43,15 @@ next-env.d.ts
 
 /lib/generated/prisma
 
-.vercel
-.env*
+# editor / IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS files
+Thumbs.db
+Desktop.ini
