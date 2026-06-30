@@ -1,26 +1,40 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse, type NextRequest } from "next/server";
-import { UserRole } from "@prisma/client";
 
-const IS_DEMO = process.env.NEXT_PUBLIC_USE_MOCKS === "true" || !process.env.DATABASE_URL;
+const IS_DEMO =
+  process.env.NEXT_PUBLIC_USE_MOCKS === "true" || !process.env.DATABASE_URL;
 
-// Define protected routes and their required roles
-const roleBasedRoutes: Record<string, UserRole[]> = {
-  "/dashboard": [
-    UserRole.ADMIN,
-    UserRole.HR,
-    UserRole.SALES,
-    UserRole.INVENTORY,
-    UserRole.FINANCE,
-    UserRole.PROJECT_MANAGER,
-    UserRole.EMPLOYEE,
-  ],
-  "/hr": [UserRole.ADMIN, UserRole.HR],
-  "/crm": [UserRole.ADMIN, UserRole.SALES],
-  "/inventory": [UserRole.ADMIN, UserRole.INVENTORY],
-  "/finance": [UserRole.ADMIN, UserRole.FINANCE],
-  "/projects": [UserRole.ADMIN, UserRole.PROJECT_MANAGER],
-  "/settings": [UserRole.ADMIN],
+// Role names mirror the Prisma `UserRole` enum. We intentionally use string
+// literals here (not the Prisma enum) so the heavy `@prisma/client` runtime is
+// never pulled into the Edge middleware bundle.
+type Role =
+  | "ADMIN"
+  | "HR"
+  | "SALES"
+  | "INVENTORY"
+  | "FINANCE"
+  | "PROJECT_MANAGER"
+  | "EMPLOYEE";
+
+const ALL_ROLES: Role[] = [
+  "ADMIN",
+  "HR",
+  "SALES",
+  "INVENTORY",
+  "FINANCE",
+  "PROJECT_MANAGER",
+  "EMPLOYEE",
+];
+
+// Protected route prefixes and the roles allowed to access them.
+const roleBasedRoutes: Record<string, Role[]> = {
+  "/dashboard": ALL_ROLES,
+  "/hr": ["ADMIN", "HR"],
+  "/crm": ["ADMIN", "SALES"],
+  "/inventory": ["ADMIN", "INVENTORY"],
+  "/finance": ["ADMIN", "FINANCE"],
+  "/projects": ["ADMIN", "PROJECT_MANAGER"],
+  "/settings": ["ADMIN"],
 };
 
 export default IS_DEMO
@@ -33,17 +47,12 @@ export default IS_DEMO
         const token = req.nextauth.token;
         const path = req.nextUrl.pathname;
 
-        // Allow access to root path
-        if (path === "/") {
-          return NextResponse.next();
-        }
+        if (path === "/") return NextResponse.next();
 
-        // Check role-based access
         for (const [route, allowedRoles] of Object.entries(roleBasedRoutes)) {
           if (path.startsWith(route)) {
-            const userRole = token?.role as UserRole;
-
-            if (!allowedRoles.includes(userRole)) {
+            const userRole = token?.role as Role | undefined;
+            if (!userRole || !allowedRoles.includes(userRole)) {
               return NextResponse.redirect(new URL("/unauthorized", req.url));
             }
           }
@@ -61,7 +70,6 @@ export default IS_DEMO
       }
     );
 
-// Specify which routes should be protected
 export const config = {
   matcher: [
     "/dashboard/:path*",
