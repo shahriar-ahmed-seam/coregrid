@@ -1,11 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Linting is run separately; don't let lint warnings block production builds.
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
   // Production optimizations.
   // `standalone` is for the Docker image; Vercel handles packaging itself.
   output:

@@ -24,7 +24,9 @@ async function getFinanceStats() {
     .filter((i) => i.status === "PAID")
     .reduce((sum, i) => sum + i.total.toNumber(), 0);
 
-  const pendingInvoices = invoices.filter((i) => i.status === "PENDING").length;
+  const pendingInvoices = invoices.filter(
+    (i) => i.status === "SENT" || i.status === "OVERDUE"
+  ).length;
 
   const totalExpenses = expenses
     .filter((e) => e.status === "APPROVED")
